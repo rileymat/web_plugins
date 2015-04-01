@@ -1,0 +1,3 @@
+source virtual_env/bin/activate
+uwsgi --http 127.0.0.1:8001 --wsgi-file examples/basic.py  --honour-stdin
+#uwsgi --socket virtual_env/mysite.sock --wsgi-file examples/basic.py --chmod-socket=666 --honour-stdin
