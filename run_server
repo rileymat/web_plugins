@@ -1,5 +1,7 @@
 source virtual_env/bin/activate
 #honour-stdin allows you to use PDB and debug python at a breakpoint.
-uwsgi --http 127.0.0.1:8001 --wsgi-file examples/basic.py  --honour-stdin
+#uwsgi --http 127.0.0.1:8001 --wsgi-file examples/basic.py  --honour-stdin
+#uwsgi --http 127.0.0.1:8001 --wsgi-file examples/basic.py  --honour-stdin --async 10 
+uwsgi --http 127.0.0.1:8001 --wsgi-file examples/app_example.py  --honour-stdin --async 10 
 #chmod-socket=666 allows a process with different permissions to access the socket. This should be tightened.
 #uwsgi --socket virtual_env/mysite.sock --wsgi-file examples/basic.py --chmod-socket=666 --honour-stdin
