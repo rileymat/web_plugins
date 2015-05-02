@@ -12,4 +12,4 @@ def basic_app(request):
 	response.response_text = "Everything is Fine"
 	return response
 
-application.handler = basic_ap
+application.handler = basic_app
