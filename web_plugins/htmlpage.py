@@ -1,4 +1,3 @@
-
 #This entire file is a really bad idea. And should never be used.
 
 class Attribute(object):
