@@ -4,7 +4,7 @@ sys.path.append('./../')
 
 import web_plugins.app
 from web_plugins.app import application
-from web_plugins.response import HtmlOkResponse
+from web_plugins.response import HtmlResponse
 from web_plugins.session import InMemorySessionHandler
 
 def session_app(request):
