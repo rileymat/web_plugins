@@ -34,7 +34,6 @@ class HtmlTemplateResponse(HtmlResponse):
 			self.template_handler = template_handler
 		else:
 			if HtmlTemplateResponse.default_template_handler is not None:
-				print "Not None"
 				self.template_handler = HtmlTemplateResponse.default_template_handler
 		self.template = template
 	def arguments():
