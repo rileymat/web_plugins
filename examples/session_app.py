@@ -8,7 +8,7 @@ from web_plugins.response import HtmlOkResponse
 from web_plugins.session import InMemorySessionHandler
 
 def session_app(request):
-	response = HtmlOkResponse()
+	response = HtmlResponse()
 	response.response_text = "Session Key" + str(request.session.key)
 	try:
 		cur_number = request.session["number"]
