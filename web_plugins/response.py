@@ -1,3 +1,4 @@
+import Cookie
 
 default_template_handler = None
 
@@ -21,10 +22,26 @@ class Response(object):
 
 class HtmlResponse(Response):
 	def __init__(self):
-		super(HtmlResponse,self).__init__()
+		super(HtmlResponse, self).__init__()
 		self.status_code = 200
 		self.response_text = "OK!"
 		self.add_header('Content-Type', 'text/html')
+
+class Redirect(Response):
+	def __init__(self, addr, origin=False):
+		super(Redirect, self).__init__()
+		self.status_code = 301
+		self.add_header('Location', addr)
+		if origin:
+			cookie = Cookie.SimpleCookie()
+			cookie['origin_location'] = origin
+			self.add_header('Set-Cookie', cookie['origin_location'].OutputString())
+
+class OriginRedirect(Redirect):
+	def __init__(self, request, addr=''):
+		if 'origin_location' in request.cookies:
+			addr = request.cookies["origin_location"]
+		super(OriginRedirect, self).__init__(addr)
 
 class HtmlTemplateResponse(HtmlResponse):
 	default_template_handler = None

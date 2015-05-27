@@ -4,7 +4,6 @@ import uuid
 class Session(object):
 	def __init__(self, key):
 		self.key = key
-
 	def add_header(self, response):
 		cookie = Cookie.SimpleCookie()
 		cookie['session'] = str(self.key)
@@ -19,6 +18,8 @@ class InMemorySession(Session):
 		return self.data[key]
 	def __setitem__(self, key, value):
 		self.data[key] = value
+	def __contains__(self, key):
+		return key in self.data
 
 
 class SessionHandler(object):
