@@ -11,7 +11,7 @@ def logged_out_get(request):
 	return response
 
 def logged_out_post(request):
-	if request.form_data["password"] == "mypass":
+	if request.form_data["password"] == "mytestpass":
 		request.session["logged_in"] = True
 		return OriginRedirect(request, '/success.html')
 	else:
@@ -25,12 +25,11 @@ def logged_in(request):
 is_logged_in = lambda request: "logged_in" in request.session 
 is_logged_out = lambda request: logged_in(request)
 
+#Lots of bad ideas below.  Routers are the same as the response pages and can be stacked.
+#Interestingly it can route by lambda function, url and method.
+
 loginhtml_router  = r.FirstMatchRouter()
 loginhtml_router.routes.extend([r.MethodRoute("post", logged_out_post), r.MethodRoute("get", logged_out_get)])
-
-#def save_origin(request, redirect):
-#	request.session['origin'] = request.path
-#	return redirect
 
 logged_out_router = r.FirstMatchRouter()
 logged_out_router.routes.extend([r.ExactRoute('/login.html', loginhtml_router),  
@@ -42,4 +41,4 @@ router.routes.extend([r.LambdaRoute(is_logged_in, logged_in), r.LambdaRoute(is_l
 application.handler = router
 
 application.session_handler = InMemorySessionHandler()
-HtmlTemplateResponse.default_template_handler = t.TemplateHandler(t.PystacheFileAdapter('./examples'))
+HtmlTemplateResponse.default_template_handler = t.TemplateHandler(t.PystacheFileAdapter('./'))

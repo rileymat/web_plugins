@@ -38,7 +38,7 @@ class Request(object):
 		self._env = env
 		self.session = None
 		self._form_data = None
-		self.cookies = Cookies(env["HTTP_COOKIE"] if "HTTP_COOKIE" else "")
+		self.cookies = Cookies(env["HTTP_COOKIE"] if "HTTP_COOKIE" in env else "")
 			
 	def form_data():
 		def fget(self):
