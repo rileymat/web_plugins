@@ -18,5 +18,5 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
     ],
-    package_data = {'':'*.md'},
+    package_data = {'':['*.md']},
 )
