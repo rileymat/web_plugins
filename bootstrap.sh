@@ -1,7 +1,5 @@
 pip install virtualenv
 virtualenv virtual_env
 source virtual_env/bin/activate
-pip install uwsgi
-pip install pystache
 pip install git+ssh://git@github.com:rileymat/web_plugins.git
-#ln -sr ./web_plugins ./virtual_env/local/lib/python2.7/site-packages/web_plugins
+setup_app.py

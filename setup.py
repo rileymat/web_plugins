@@ -12,11 +12,11 @@ setup(
     url = "http://www.oscmp.com/web_plugins",
     packages=['web_plugins'],
     long_description='README',
-    setup_requires=['uwsgi', 'pystache'],
+    scripts=['setup_app.py'],
+	setup_requires=['uwsgi', 'pystache'],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
     ],
-    package_data = {'':['*.md']},
 )
