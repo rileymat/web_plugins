@@ -134,6 +134,7 @@ if use_upstart:
 	upstart_config_file_name = upstart_config_name + '.conf'
 	write_file(upstart_config_file_name, upstart_config)
 	os.system('sudo cp {working_directory}/{upstart_config_file_name} /etc/init/{upstart_config_file_name}'.format(upstart_config_file_name = upstart_config_file_name, working_directory=working_directory))
+	os.system('sudo initctl reload-configuration')
 	os.system('sudo start {upstart_config_name}'.format(upstart_config_name=upstart_config_name))
 
 
