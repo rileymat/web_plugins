@@ -1,8 +1,21 @@
 #!/usr/bin/python
 
+
 from distutils.util import strtobool
 import readline
 import os
+
+
+import argparse
+
+parser = argparse.ArgumentParser(description='Setup web plugins app.')
+parser.add_argument('--generate-basic-site', dest='generate_basic_site', action='store_true')
+parser.add_argument('--no-generate-basic-site', dest='generate_basic_site', action='store_false')
+parser.set_defaults(feature=True)
+
+args = parser.parse_args()
+print args.generate_basic_site
+
 
 working_directory = os.getcwd()
 
@@ -94,21 +107,10 @@ def write_executable(filename, content):
 write_executable('run_server_nginx', run_server_nginx_template)
 write_executable('run_server', run_server_template)
 write_file('{}_nginx.conf'.format(app_name), nginx_config_template)
-write_executable('{}.py'.format(app_name), basic_site_template.format(app_name=app_name))
 
-#with open("run_server_nginx", "w") as text_file:
-#    text_file.write(run_server_nginx_template)
-#os.system('chmod +x run_server_nginx')
+if generate_basic_site:
+	write_executable('{}.py'.format(app_name), basic_site_template.format(app_name=app_name))
 
-#with open("run_server", "w") as text_file:
-#    text_file.write(run_server_template)
-#os.system('chmod +x run_server')
-#
-#with open("{}_nginx.conf".format(app_name), "w") as text_file:
-#    text_file.write(nginx_config_template)
-#
-#with open("{}.py".format(app_name), "w") as text_file:
-#	text_file.write(basic_site.format(app_name=app_name))
 
 os.system('sudo ln -s {0}/{1}_nginx.conf {2}/{1}_nginx.conf'.format(working_directory, app_name, nginx_config_location))
 os.system(restart_nginx_command)
