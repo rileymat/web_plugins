@@ -11,10 +11,15 @@ import argparse
 parser = argparse.ArgumentParser(description='Setup web plugins app.')
 parser.add_argument('--generate-basic-site', dest='generate_basic_site', action='store_true')
 parser.add_argument('--no-generate-basic-site', dest='generate_basic_site', action='store_false')
-parser.set_defaults(feature=True)
+parser.set_defaults(generate_basic_site=True)
+
+parser.add_argument('--app-name', dest='app_name', default='app')
 
 args = parser.parse_args()
-print args.generate_basic_site
+
+app_name = args.app_name
+generate_basic_site = args.generate_basic_site
+
 
 
 working_directory = os.getcwd()
@@ -25,7 +30,7 @@ def input_or_default(prompt, default=''):
 	prompt = prompt + ': '
 	return raw_input(prompt).strip() or default
 
-app_name = input_or_default('Enter App Name', 'app')
+app_name = input_or_default('Enter App Name', app_name)
 host_name = input_or_default('Enter Host Name', app_name + '.oscmp.com')
 nginx_config_location = input_or_default('Nginx Config Location', '/etc/nginx/sites-enabled')
 restart_nginx_command = input_or_default('Nginx Restart Command', 'sudo service nginx restart')
@@ -97,6 +102,16 @@ def {app_name}(request):
 application.handler = {app_name}
 """.format(app_name=app_name)
 
+git_ignore_template = """
+virtual_env/
+*.pyc
+run_server
+run_server_nginx
+*.conf
+cleanup.sh
+"""
+
+
 def write_file(filename, content):
 	with open(filename, 'w') as text_file:
 		text_file.write(content)
@@ -104,9 +119,11 @@ def write_executable(filename, content):
 	write_file(filename, content)
 	os.system('chmod +x ' + filename)
 
+
 write_executable('run_server_nginx', run_server_nginx_template)
 write_executable('run_server', run_server_template)
 write_file('{}_nginx.conf'.format(app_name), nginx_config_template)
+write_file('.gitignore', git_ignore_template)
 
 if generate_basic_site:
 	write_executable('{}.py'.format(app_name), basic_site_template.format(app_name=app_name))
@@ -139,7 +156,7 @@ if use_upstart:
 	os.system('sudo initctl reload-configuration')
 	os.system('sudo start {upstart_config_name}'.format(upstart_config_name=upstart_config_name))
 
-
+os.system("sed -i -e 's/^setup_app.py$/setup_app.py --no-generate-basic-site --app-name={app_name}/g' bootstrap.sh".format(app_name=app_name))
 
 cleanup_script = """
 rm {app_name}_nginx.conf
