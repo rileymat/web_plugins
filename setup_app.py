@@ -5,6 +5,7 @@ from distutils.util import strtobool
 import os
 import readline
 
+####### Helper functions ##############
 def write_file(filename, content):
 	with open(filename, 'w') as text_file:
 		text_file.write(content)
@@ -21,34 +22,46 @@ def input_or_default(prompt, default=''):
 
 def get_arguments():
 	parser = argparse.ArgumentParser(description='Setup web plugins app.')
+	
 	parser.add_argument('--generate-basic-site', dest='generate_basic_site', action='store_true')
 	parser.add_argument('--no-generate-basic-site', dest='generate_basic_site', action='store_false')
+
+	parser.add_argument('--add-git-ignore', dest='add_git_ignore', action='store_true')
+	parser.add_argument('--no-add-git-ignore', dest='add_git_ignore', action='store_false')
+	
 	parser.set_defaults(generate_basic_site=True)
+
 	parser.add_argument('--app-name', dest='app_name', default='app')
 	args = parser.parse_args()
 	return args
+########################################
 
 args = get_arguments()
 app_name = args.app_name
 generate_basic_site = args.generate_basic_site
+add_git_ignore = args.add_git_ignore
 
 working_directory = os.getcwd()
 
 ######### Get info from user #############
-app_name = input_or_default('Enter App Name', app_name)
+app_name = input_or_default('Enter app name', app_name)
 host_name = input_or_default('Enter Host Name', app_name + '.oscmp.com')
-nginx_config_location = input_or_default('Nginx Config Location', '/etc/nginx/sites-enabled')
-restart_nginx_command = input_or_default('Nginx Restart Command', 'sudo service nginx restart')
-add_to_host_file = input_or_default('Add to host file', 'y')
-add_to_upstart = input_or_default('Add to upstart', 'y')
+run_server_port = input_or_default('Enter run server port', '8001') 
+add_to_nginx = input_or_default('Add to Nginx', 'y')
+if add_to_nginx:
+	nginx_config_location = input_or_default('Nginx Config Location', '/etc/nginx/sites-enabled')
+	restart_nginx_command = input_or_default('Nginx Restart Command', 'sudo service nginx restart')
+
+add_to_host_file = strtobool(input_or_default('Add to host file', 'y'))
+add_to_upstart = strtobool(input_or_default('Add to upstart', 'y'))
 ##########################################
 
 
 
-####### File Templates ##################
+####### File templates ##################
 run_server = """source virtual_env/bin/activate
-uwsgi --http 127.0.0.1:8001 --wsgi-file {}.py  --honour-stdin --async 10 
-""".format(app_name)
+uwsgi --http 127.0.0.1:{run_server_port} --wsgi-file {app_name}.py  --honour-stdin --async 10 
+""".format(app_name=app_name, run_server_port=run_server_port)
 
 run_server_nginx = """cd {working_directory}
 source virtual_env/bin/activate
@@ -130,13 +143,12 @@ end script
 
 cleanup_script_template = """
 rm {app_name}_nginx.conf
-rm {app_name}.py
 rm run_server
 rm run_server_nginx
 rm -rf virtual_env
 sudo rm {nginx_config_location}/{app_name}_nginx.conf
-sudo sed -i '/{host_line}/d' /etc/hosts
-rm {upstart_config_file_name}
+{host_file_line}
+{upstart_line}
 {upstart_line}
 rm cleanup.sh 
 """
@@ -144,26 +156,28 @@ rm cleanup.sh
 
 
 ############  Write Files  #########################
-write_executable('run_server_nginx', run_server_nginx)
+if add_to_nginx:
+	write_executable('run_server_nginx', run_server_nginx)
+	write_file('{}_nginx.conf'.format(app_name), nginx_config)
+
 write_executable('run_server', run_server)
-write_file('{}_nginx.conf'.format(app_name), nginx_config)
-write_file('.gitignore', git_ignore)
+
+if add_git_ignore:
+	write_file('.gitignore', git_ignore)
 
 if generate_basic_site:
 	write_executable('{}.py'.format(app_name), basic_site.format(app_name=app_name))
 
+if add_to_nginx:
+	os.system('sudo ln -s {0}/{1}_nginx.conf {2}/{1}_nginx.conf'.format(working_directory, app_name, nginx_config_location))
+	os.system(restart_nginx_command)
 
-os.system('sudo ln -s {0}/{1}_nginx.conf {2}/{1}_nginx.conf'.format(working_directory, app_name, nginx_config_location))
-os.system(restart_nginx_command)
-
-host_line = '127.0.0.1 ' + host_name
-if strtobool(add_to_host_file):
+if add_to_host_file:
+	host_line = '127.0.0.1 ' + host_name
 	os.system('echo "' + host_line + '" | sudo tee -a /etc/hosts');
 
 
-
-use_upstart = strtobool(add_to_upstart)
-if use_upstart:
+if add_to_upstart:
 	upstart_config_name = '{app_name}_uwsgi_nginx'.format(app_name=app_name)
 	upstart_config_file_name = upstart_config_name + '.conf'
 	write_file(upstart_config_file_name, upstart_config)
@@ -171,10 +185,19 @@ if use_upstart:
 	os.system('sudo initctl reload-configuration')
 	os.system('sudo start {upstart_config_name}'.format(upstart_config_name=upstart_config_name))
 
-os.system("sed -i -e 's/^setup_app.py$/setup_app.py --no-generate-basic-site --app-name={app_name}/g' bootstrap.sh".format(app_name=app_name))
+os.system("sed -i -e 's/^setup_app.py$/setup_app.py --no-generate-basic-site --no-add-git-ignore --app-name={app_name}/g' bootstrap.sh".format(app_name=app_name))
 
 
+upstart_line = 'rm {upstart_config_file_name}\nsudo rm /etc/init/{upstart_config_file_name}'.format(upstart_config_file_name=upstart_config_file_name) if add_to_upstart else ''
+host_file_line = "sudo sed -i '/{host_line}/d' /etc/hosts".format(host_line=host_line) if add_to_host_file else ''
 
-write_executable('cleanup.sh', cleanup_script_template.format(app_name=app_name, host_name=host_name, nginx_config_location=nginx_config_location, host_line=host_line, 
-           upstart_config_file_name=upstart_config_file_name,
-		   upstart_line='sudo rm /etc/init/' + upstart_config_file_name if use_upstart else ''))
+write_executable('cleanup.sh', 
+				 cleanup_script_template.format(app_name=app_name, 
+												host_name=host_name, 
+												nginx_config_location=nginx_config_location, 
+												host_line=host_line, 
+												upstart_config_file_name=upstart_config_file_name,
+												upstart_line=upstart_line,
+												host_file_line=host_file_line
+											)
+				 )
