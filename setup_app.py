@@ -26,10 +26,9 @@ def get_arguments():
 	parser.add_argument('--generate-basic-site', dest='generate_basic_site', action='store_true')
 	parser.add_argument('--no-generate-basic-site', dest='generate_basic_site', action='store_false')
 
-	parser.add_argument('--add-git-ignore', dest='add_git_ignore', action='store_true')
-	parser.add_argument('--no-add-git-ignore', dest='add_git_ignore', action='store_false')
-	
-	parser.set_defaults(generate_basic_site=True)
+	parser.add_argument('--create-git-repo', dest='create_git_repo', action='store_true')
+	parser.add_argument('--no-create-git-repo', dest='create_git_repo', action='store_false')
+	parser.set_defaults(generate_basic_site=True, create_git_repo=True)
 
 	parser.add_argument('--app-name', dest='app_name', default='app')
 	args = parser.parse_args()
@@ -39,15 +38,24 @@ def get_arguments():
 args = get_arguments()
 app_name = args.app_name
 generate_basic_site = args.generate_basic_site
-add_git_ignore = args.add_git_ignore
+create_git_repo = args.create_git_repo
 
 working_directory = os.getcwd()
 
 ######### Get info from user #############
 app_name = input_or_default('Enter app name', app_name)
 host_name = input_or_default('Enter Host Name', app_name + '.oscmp.com')
-run_server_port = input_or_default('Enter run server port', '8001') 
-add_to_nginx = input_or_default('Add to Nginx', 'y')
+run_server_port = input_or_default('Enter run server port', '8001')
+create_git_repo = strtobool(input_or_default('Create git repo', 'y' if create_git_repo else 'n'))
+if create_git_repo:
+	create_github_repo = strtobool(input_or_default('Create github repo', 'n'))
+	if create_github_repo:
+		github_username = ''
+		while (github_username == ''): github_username = input_or_default('Github username', '')
+		github_repo_name = ''
+		while (github_repo_name == ''): github_repo_name = input_or_default('Github repo name', app_name)
+
+add_to_nginx = strtobool(input_or_default('Add to Nginx', 'y'))
 if add_to_nginx:
 	nginx_config_location = input_or_default('Nginx Config Location', '/etc/nginx/sites-enabled')
 	restart_nginx_command = input_or_default('Nginx Restart Command', 'sudo service nginx restart')
@@ -149,7 +157,6 @@ rm -rf virtual_env
 sudo rm {nginx_config_location}/{app_name}_nginx.conf
 {host_file_line}
 {upstart_line}
-{upstart_line}
 rm cleanup.sh 
 """
 ###################################################
@@ -161,9 +168,6 @@ if add_to_nginx:
 	write_file('{}_nginx.conf'.format(app_name), nginx_config)
 
 write_executable('run_server', run_server)
-
-if add_git_ignore:
-	write_file('.gitignore', git_ignore)
 
 if generate_basic_site:
 	write_executable('{}.py'.format(app_name), basic_site.format(app_name=app_name))
@@ -185,17 +189,26 @@ if add_to_upstart:
 	os.system('sudo initctl reload-configuration')
 	os.system('sudo start {upstart_config_name}'.format(upstart_config_name=upstart_config_name))
 
-os.system("sed -i -e 's/^setup_app.py$/setup_app.py --no-generate-basic-site --no-add-git-ignore --app-name={app_name}/g' bootstrap.sh".format(app_name=app_name))
+os.system("sed -i -e 's/^setup_app.py$/setup_app.py --no-generate-basic-site --no-create-git-repo --app-name={app_name}/g' bootstrap.sh".format(app_name=app_name))
 
 
 upstart_line = 'rm {upstart_config_file_name}\nsudo rm /etc/init/{upstart_config_file_name}'.format(upstart_config_file_name=upstart_config_file_name) if add_to_upstart else ''
 host_file_line = "sudo sed -i '/{host_line}/d' /etc/hosts".format(host_line=host_line) if add_to_host_file else ''
 
+if create_git_repo:
+	write_file('.gitignore', git_ignore)
+	os.system('git init')
+	os.system('git add .')
+	os.system("git commit -am 'Initial auto commit.'")
+	if create_github_repo:
+		os.system("""curl -u '{github_username}' https://api.github.com/user/repos -d '{{"name":"{repo_name}"}}'""".format(github_username=github_username,repo_name=github_repo_name))
+		os.system('git remote add origin git@github.com:{github_username}/{repo_name}.git'.format(github_username=github_username, repo_name=github_repo_name))
+		os.system('git push origin master')
+
 write_executable('cleanup.sh', 
 				 cleanup_script_template.format(app_name=app_name, 
 												host_name=host_name, 
 												nginx_config_location=nginx_config_location, 
-												host_file_line=host_file_line, 
 												upstart_config_file_name=upstart_config_file_name,
 												upstart_line=upstart_line,
 												host_file_line=host_file_line
