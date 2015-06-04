@@ -195,7 +195,7 @@ write_executable('cleanup.sh',
 				 cleanup_script_template.format(app_name=app_name, 
 												host_name=host_name, 
 												nginx_config_location=nginx_config_location, 
-												host_line=host_line, 
+												host_file_line=host_file_line, 
 												upstart_config_file_name=upstart_config_file_name,
 												upstart_line=upstart_line,
 												host_file_line=host_file_line
