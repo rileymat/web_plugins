@@ -41,6 +41,7 @@ generate_basic_site = args.generate_basic_site
 create_git_repo = args.create_git_repo
 
 working_directory = os.getcwd()
+static_directory  = 'static'
 
 ######### Get info from user #############
 app_name = input_or_default('Enter app name', app_name)
@@ -90,11 +91,11 @@ server {{
     # max upload size
     client_max_body_size 75M;   # adjust to taste
 
-    #  location /static {{
-    #      alias /path/to/your/mysite/static; # your Django project's static files - amend as required
-    #  }}
+    location /{static_directory}/ {{
+         alias {working_directory}/{static_directory};
+      }}
 
-    # Finally, send all non-media requests to the Django server.
+
     location / {{
         uwsgi_pass   web_plugin_app_{app_name};
         uwsgi_param  QUERY_STRING       $query_string;
@@ -115,21 +116,25 @@ server {{
 
     }}
 }}
-""".format(app_name=app_name, working_directory=working_directory)
+""".format(app_name=app_name, working_directory=working_directory, static_directory=static_directory)
 
 basic_site = """
 import web_plugins.app
 from web_plugins.app import application
-from web_plugins.response import HtmlResponse
-
+from web_plugins.response import HtmlResponse, HtmlFileResponse
+import web_plugins.router as r
 
 def {app_name}(request):
 	response = HtmlResponse()
 	response.response_text = "{app_name} feels great."
 	return response
 
-application.handler = {app_name}
-""".format(app_name=app_name)
+static_router = r.PathRoute('/{static_directory}', lambda request: HtmlFileResponse('.' + request.path))
+router = r.FirstMatchRouter()
+router.routes.extend([static_router, r.Route({app_name})])
+application.handler = router
+
+""".format(app_name=app_name, static_directory=static_directory)
 
 git_ignore = """
 virtual_env/
@@ -163,6 +168,7 @@ rm cleanup.sh
 
 
 ############  Write Files  #########################
+
 if add_to_nginx:
 	write_executable('run_server_nginx', run_server_nginx)
 	write_file('{}_nginx.conf'.format(app_name), nginx_config)
@@ -171,6 +177,7 @@ write_executable('run_server', run_server)
 
 if generate_basic_site:
 	write_executable('{}.py'.format(app_name), basic_site.format(app_name=app_name))
+	os.system('mkdir {static_directory}'.format(static_directory=static_directory))
 
 if add_to_nginx:
 	os.system('sudo ln -s {0}/{1}_nginx.conf {2}/{1}_nginx.conf'.format(working_directory, app_name, nginx_config_location))

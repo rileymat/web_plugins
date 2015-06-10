@@ -3,10 +3,9 @@ import Cookie
 default_template_handler = None
 
 class Response(object):
-	def __init__(self):
+	def __init__(self,*args, **kwargs):
 		self.headers=[]
 		self.status_code = None
-		self.response_text = ""
 		self.start_response = None
 	
 	def add_header(self, name, content):
@@ -21,10 +20,9 @@ class Response(object):
 		return self.response_text
 
 class HtmlResponse(Response):
-	def __init__(self):
-		super(HtmlResponse, self).__init__()
+	def __init__(self, *args, **kwargs):
+		super(HtmlResponse, self).__init__(*args, **kwargs)
 		self.status_code = 200
-		self.response_text = "OK!"
 		self.add_header('Content-Type', 'text/html')
 
 class Redirect(Response):
@@ -63,3 +61,14 @@ class HtmlTemplateResponse(HtmlResponse):
 			del self._template
 		return locals()
 	arguments = property(**arguments())
+
+class FileResponse(Response):
+	def __init__(self, *args, **kwargs):
+		super(FileResponse, self).__init__(*args, **kwargs)
+		self.status_code = kwargs['status_code']
+		with open(kwargs['filename']) as f:
+			self.response_text = f.read()
+
+class HtmlFileResponse(HtmlResponse, FileResponse):
+	def __init__(self, filename, status_code=200):
+		super(HtmlFileResponse, self).__init__(filename=filename, status_code=status_code)

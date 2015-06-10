@@ -1,5 +1,5 @@
 import sys
-sys.path.append('./../')
+sys.path.append('./../../')
 
 
 import web_plugins.app
@@ -14,4 +14,4 @@ def email_app(request):
 	return response
 
 application.handler = email_app
-HtmlTemplateResponse.default_template_handler = t.TemplateHandler(t.PystacheFileAdapter('./examples'))
+HtmlTemplateResponse.default_template_handler = t.TemplateHandler(t.PystacheFileAdapter('./email_app/examples'))
