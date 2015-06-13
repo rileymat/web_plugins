@@ -85,14 +85,14 @@ server {{
     # the port your site will be served on
     listen      80;
     # the domain name it will serve for
-    server_name {app_name}.oscmp.com; # substitute your machine's IP address or FQDN
+    server_name {host_name}; # substitute your machine's IP address or FQDN
     charset     utf-8;
 
     # max upload size
     client_max_body_size 75M;   # adjust to taste
 
     location /{static_directory}/ {{
-         alias {working_directory}/{static_directory};
+         alias {working_directory}/{static_directory}/;
       }}
 
 
@@ -116,7 +116,7 @@ server {{
 
     }}
 }}
-""".format(app_name=app_name, working_directory=working_directory, static_directory=static_directory)
+""".format(app_name=app_name, working_directory=working_directory, static_directory=static_directory, host_name=host_name)
 
 basic_site = """
 import web_plugins.app

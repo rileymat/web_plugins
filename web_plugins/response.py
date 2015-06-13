@@ -3,7 +3,7 @@ import Cookie
 default_template_handler = None
 
 class Response(object):
-	def __init__(self,*args, **kwargs):
+	def __init__(self, *args, **kwargs):
 		self.headers=[]
 		self.status_code = None
 		self.start_response = None
@@ -63,12 +63,12 @@ class HtmlTemplateResponse(HtmlResponse):
 	arguments = property(**arguments())
 
 class FileResponse(Response):
-	def __init__(self, *args, **kwargs):
+	def __init__(self, filename, status_code, *args, **kwargs):
 		super(FileResponse, self).__init__(*args, **kwargs)
-		self.status_code = kwargs['status_code']
-		with open(kwargs['filename']) as f:
+		self.status_code = status_code
+		with open(filename) as f:
 			self.response_text = f.read()
 
 class HtmlFileResponse(HtmlResponse, FileResponse):
 	def __init__(self, filename, status_code=200):
-		super(HtmlFileResponse, self).__init__(filename=filename, status_code=status_code)
+		super(HtmlFileResponse, self).__init__(filename, status_code)
