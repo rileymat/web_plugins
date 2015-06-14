@@ -86,17 +86,17 @@ server {{
     listen      80;
     # the domain name it will serve for
     server_name {host_name}; # substitute your machine's IP address or FQDN
+    root {working_directory};
     charset     utf-8;
 
     # max upload size
     client_max_body_size 75M;   # adjust to taste
-
-    location /{static_directory}/ {{
-         alias {working_directory}/{static_directory}/;
-      }}
-
-
     location / {{
+         try_files /{static_directory}$uri @web_plugins;
+         #error_page 404 = @web_plugins;
+     }}
+    location @web_plugins {{
+
         uwsgi_pass   web_plugin_app_{app_name};
         uwsgi_param  QUERY_STRING       $query_string;
         uwsgi_param  REQUEST_METHOD     $request_method;
@@ -121,7 +121,7 @@ server {{
 basic_site = """
 import web_plugins.app
 from web_plugins.app import application
-from web_plugins.response import HtmlResponse, HtmlFileResponse
+from web_plugins.response import HtmlResponse
 import web_plugins.router as r
 
 def {app_name}(request):
@@ -129,7 +129,7 @@ def {app_name}(request):
 	response.response_text = "{app_name} feels great."
 	return response
 
-static_router = r.PathRoute('/{static_directory}', lambda request: HtmlFileResponse('.' + request.path))
+static_router = r.FileRoute('/','./{static_directory}')
 router = r.FirstMatchRouter()
 router.routes.extend([static_router, r.Route({app_name})])
 application.handler = router

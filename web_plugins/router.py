@@ -1,3 +1,5 @@
+import os
+from response import HtmlFileResponse
 
 class FirstMatchRouter(object):
 	def __init__(self):
@@ -5,9 +7,14 @@ class FirstMatchRouter(object):
 	def __call__(self, request):
 		return self.route(request)
 	def route(self, request):
+		route = self.matches(request)
+		if route: 
+			return route.route(request)
+	def matches(self, request):
 		for route in self.routes:
 			if route.matches(request):
-				return route.route(request)
+				return route
+		return False
 
 class PriorityRouter(FirstMatchRouter):
 	def __init__(self):
@@ -20,7 +27,8 @@ class Route(object):
 	def __init__(self, handler):
 		self.handler = handler
 	def __call__(self, request):
-		return self.route(request)
+		if self.matches(request):
+			return self.route(request)
 	def matches(self, request):
 		return True
 	def route(self, request):
@@ -44,3 +52,20 @@ class MethodRoute(LambdaRoute):
 class PathRoute(LambdaRoute):
 	def __init__(self, path, handler):
 		super(PathRoute, self).__init__((lambda request: request.path.lower().startswith(path.lower())), handler)
+
+class FileRoute(PathRoute):
+	def __init__(self, url_path_prefix, local_file_location):
+		self.url_path_prefix = url_path_prefix
+		self.local_file_location = local_file_location
+		def serve_file(url_path_prefix, local_file_location):
+			def serve_file_func(request):
+				file_path = local_file_location + '/' + request.path[len(url_path_prefix):]
+				return HtmlFileResponse(file_path)
+			return serve_file_func
+		super(FileRoute, self).__init__(url_path_prefix,  serve_file(url_path_prefix, local_file_location))
+	
+	def matches(self, request):
+		if super(FileRoute, self).matches(request):
+			file_path = self.local_file_location + '/' + request.path[len(self.url_path_prefix):]
+			return os.path.isfile(file_path)
+		return False

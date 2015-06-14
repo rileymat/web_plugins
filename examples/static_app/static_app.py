@@ -3,6 +3,6 @@ from web_plugins.response import HtmlFileResponse
 
 import web_plugins.router as r
 
-static_router = r.PathRoute('/static', lambda request: HtmlFileResponse('./examples/static_app' + request.path))
-
+static_router = r.FirstMatchRouter()
+static_router = r.FileRoute('/', './examples/static_app/static')
 application.handler = static_router
