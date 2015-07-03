@@ -7,6 +7,7 @@ class TemplateHandler(object):
 		return self.adapter.render(*args, **kwargs)
 
 import pystache
+
 class PystacheAdapter(object):
 	def render(self, template, args, **kwargs):
 		return pystache.render(template, args)
@@ -14,6 +15,7 @@ class PystacheAdapter(object):
 class PystacheFileAdapter(object):
 	def __init__(self, template_root):
 		self.template_root = template_root
+		pystache.defaults.SEARCH_DIRS.append(self.template_root)
 	def render(self, template, args, **kwargs):
 		renderer = pystache.Renderer()
 		return renderer.render_path(self.template_root + '/' + template, args)
