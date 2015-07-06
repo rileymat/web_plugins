@@ -70,7 +70,7 @@ class HtmlTemplateResponse(HtmlResponse):
 def detect_content_type(filename):
 	suffix_content_type = [('.html','text/html'),('.css', 'text/css'), ('.gif','image/gif'), ('.png','image/png')]
 	for t in suffix_content_type:
-		if filename.endswitht.[0]:
+		if filename.endswith(t[0]):
 			return t[1]
 	return 'text/html'
 
