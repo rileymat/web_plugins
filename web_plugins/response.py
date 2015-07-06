@@ -10,6 +10,11 @@ class Response(object):
 	
 	def add_header(self, name, content):
 		self.headers.append((name, content))
+	def set_header(self, name, content):
+		self.remove_header(name)
+		self.add_header(name, content)
+	def remove_header(self, name):
+		self.headers = [x for x in self.headers if x[0] != name]
 	def send_response_header(self):
 		self.start_response(str(self.status_code), [x for x in self.headers])
 	def response_body(self):
@@ -23,7 +28,7 @@ class HtmlResponse(Response):
 	def __init__(self, *args, **kwargs):
 		super(HtmlResponse, self).__init__(*args, **kwargs)
 		self.status_code = 200
-		self.add_header('Content-Type', 'text/html')
+		self.set_header('Content-Type', 'text/html')
 
 class Redirect(Response):
 	def __init__(self, addr, origin=False):
@@ -62,13 +67,21 @@ class HtmlTemplateResponse(HtmlResponse):
 		return locals()
 	arguments = property(**arguments())
 
+def detect_content_type(filename):
+	suffix_content_type = [('.html','text/html'),('.css', 'text/css'), ('.gif','image/gif'), ('.png','image/png')]
+	for t in suffix_content_type:
+		if filename.endswitht.[0]:
+			return t[1]
+	return 'text/html'
+
 class FileResponse(Response):
 	def __init__(self, filename, status_code, *args, **kwargs):
 		super(FileResponse, self).__init__(*args, **kwargs)
 		self.status_code = status_code
 		with open(filename) as f:
 			self.response_text = f.read()
+		self.add_header('Content-Type', detect_content_type(filename))
 
-class HtmlFileResponse(HtmlResponse, FileResponse):
-	def __init__(self, filename, status_code=200):
-		super(HtmlFileResponse, self).__init__(filename, status_code)
+#class HtmlFileResponse(HtmlResponse, FileResponse):
+#	def __init__(self, filename, status_code=200):
+#		super(HtmlFileResponse, self).__init__(filename, status_code)

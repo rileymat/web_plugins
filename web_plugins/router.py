@@ -1,5 +1,5 @@
 import os
-from response import HtmlFileResponse
+from response import FileResponse
 
 class FirstMatchRouter(object):
 	def __init__(self):
@@ -60,7 +60,7 @@ class FileRoute(PathRoute):
 		def serve_file(url_path_prefix, local_file_location):
 			def serve_file_func(request):
 				file_path = local_file_location + '/' + request.path[len(url_path_prefix):]
-				return HtmlFileResponse(file_path)
+				return FileResponse(file_path)
 			return serve_file_func
 		super(FileRoute, self).__init__(url_path_prefix,  serve_file(url_path_prefix, local_file_location))
 	
