@@ -33,7 +33,7 @@ class Cookies(object):
 class Request(object):
 	def __init__(self, env):
 		#pp.pprint(env)
-		self.path = env['REQUEST_URI']
+		self.path = env['PATH_INFO']
 		self.method = env['REQUEST_METHOD']
 		self._env = env
 		self.session = None
