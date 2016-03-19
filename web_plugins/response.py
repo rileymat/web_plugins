@@ -7,7 +7,7 @@ class Response(object):
 		self.headers=[]
 		self.status_code = None
 		self.start_response = None
-	
+		self.response_text = ""	
 	def add_header(self, name, content):
 		self.headers.append((name, content))
 	def set_header(self, name, content):
