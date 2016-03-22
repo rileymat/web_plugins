@@ -8,7 +8,7 @@ class FirstMatchRouter(object):
 		return self.route(request)
 	def route(self, request):
 		route = self.matches(request)
-		if route: 
+		if route:
 			return route.route(request)
 	def matches(self, request):
 		for route in self.routes:
@@ -63,7 +63,7 @@ class FileRoute(PathRoute):
 				return FileResponse(file_path, 200)
 			return serve_file_func
 		super(FileRoute, self).__init__(url_path_prefix,  serve_file(url_path_prefix, local_file_location))
-	
+
 	def matches(self, request):
 		if super(FileRoute, self).matches(request):
 			file_path = self.local_file_location + '/' + request.path[len(self.url_path_prefix):]
