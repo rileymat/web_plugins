@@ -8,7 +8,7 @@ class Session(object):
 		cookie = Cookie.SimpleCookie()
 		cookie['session'] = str(self.key)
 		response.add_header('Set-Cookie', cookie['session'].OutputString())
-			
+
 class InMemorySession(Session):
 	def __init__(self, key):
 		super(InMemorySession,self).__init__(key)
@@ -18,6 +18,11 @@ class InMemorySession(Session):
 		return self.data[key]
 	def __setitem__(self, key, value):
 		self.data[key] = value
+	def __delitem__(self, key):
+		try:
+			del self.data[key]
+		except KeyError:
+			pass
 	def __contains__(self, key):
 		return key in self.data
 
@@ -40,8 +45,7 @@ class InMemorySessionHandler(SessionHandler):
 		self.sessions = {}
 	def session(self, key):
 		if key is None or key not in self.sessions:
-			new_key = str(uuid.uuid4().hex) 
+			new_key = str(uuid.uuid4().hex)
 			self.sessions[new_key] = InMemorySession(new_key)
 			return self.sessions[new_key]
 		return self.sessions[key]
-		
