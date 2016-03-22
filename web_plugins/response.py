@@ -7,7 +7,7 @@ class Response(object):
 		self.headers=[]
 		self.status_code = None
 		self.start_response = None
-		self.response_text = ""	
+		self.response_text = ""
 	def add_header(self, name, content):
 		self.headers.append((name, content))
 	def set_header(self, name, content):
@@ -33,7 +33,7 @@ class HtmlResponse(Response):
 class Redirect(Response):
 	def __init__(self, addr, origin=False):
 		super(Redirect, self).__init__()
-		self.status_code = 301
+		self.status_code = 302
 		self.add_header('Location', addr)
 		if origin:
 			cookie = Cookie.SimpleCookie()
