@@ -8,6 +8,7 @@ class Response(object):
 		self.status_code = None
 		self.start_response = None
 		self.response_text = ""
+
 	def add_header(self, name, content):
 		self.headers.append((name, content))
 	def set_header(self, name, content):
@@ -85,3 +86,9 @@ class FileResponse(Response):
 #class HtmlFileResponse(HtmlResponse, FileResponse):
 #	def __init__(self, filename, status_code=200):
 #		super(HtmlFileResponse, self).__init__(filename, status_code)
+
+class Middleware(object):
+	def __init__(self, middleware_func):
+		self.middleware_func = middleware_func
+	def process(self, request, response):
+		self.middleware_func(request, response)

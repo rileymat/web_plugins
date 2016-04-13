@@ -1,15 +1,46 @@
 import os
 from response import FileResponse
 
-class FirstMatchRouter(object):
+class Route(object):
+	def __init__(self, handler):
+		self.handler = handler
+		self.pre_route = []
+		self.post_route = []
+	def __call__(self, request):
+		if self.matches(request):
+			return self.route(request)
+	def matches(self, request):
+		return True
+	def route(self, request):
+		response = None
+		for m in self.pre_route:
+			response = m(request)
+			if response is not None: break
+		if response is None:
+			response =  self.handler(request)
+		for m in self.post_route:
+			m(request, response)
+		return response
+
+class FirstMatchRouter(Route):
 	def __init__(self):
 		self.routes = []
+		super(FirstMatchRouter, self).__init__(self.route)
 	def __call__(self, request):
 		return self.route(request)
 	def route(self, request):
-		route = self.matches(request)
-		if route:
-			return route.route(request)
+		response = None
+		for m in self.pre_route:
+			response = m(request)
+			if response is not None: break
+		if response is None:
+			route = self.matches(request)
+			if route:
+				response = route.route(request)
+		for m in self.post_route:
+			m(request, response)
+		return response
+
 	def matches(self, request):
 		for route in self.routes:
 			if route.matches(request):
@@ -22,17 +53,6 @@ class PriorityRouter(FirstMatchRouter):
 	def add_route(self, route):
 		self.routes.append(route)
 		#sort the routes.
-
-class Route(object):
-	def __init__(self, handler):
-		self.handler = handler
-	def __call__(self, request):
-		if self.matches(request):
-			return self.route(request)
-	def matches(self, request):
-		return True
-	def route(self, request):
-		return self.handler(request)
 
 class LambdaRoute(Route):
 	def __init__(self, func, handler):
@@ -69,3 +89,17 @@ class FileRoute(PathRoute):
 			file_path = self.local_file_location + '/' + request.path[len(self.url_path_prefix):]
 			return os.path.isfile(file_path)
 		return False
+
+import re
+
+class RegexRoute(Route):
+	def __init__(self, expression, handler):
+		self.expression = re.compile(expression)
+		super(RegexRoute, self).__init__(handler)
+	def matches(self, request):
+		match = self.expression.match(request.path)
+		if match:
+			request.params = match.groupdict()
+			return True
+		else:
+			return False
