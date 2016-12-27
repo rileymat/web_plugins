@@ -63,6 +63,7 @@ if add_to_nginx:
 
 add_to_host_file = strtobool(input_or_default('Add to host file', 'y'))
 add_to_upstart = strtobool(input_or_default('Add to upstart', 'y'))
+add_to_systemd = strtobool(input_or_default('Add to systemd', 'y'))
 ##########################################
 
 
@@ -72,7 +73,8 @@ run_server = """source virtual_env/bin/activate
 uwsgi --http 127.0.0.1:{run_server_port} --wsgi-file {app_name}.py  --honour-stdin --async 10 
 """.format(app_name=app_name, run_server_port=run_server_port)
 
-run_server_nginx = """cd {working_directory}
+run_server_nginx = """#!/bin/bash
+cd {working_directory}
 source virtual_env/bin/activate
 uwsgi --socket virtual_env/{app_name}.sock --wsgi-file {app_name}.py --chmod-socket=666 --async 10
 """.format(app_name=app_name, working_directory=working_directory)
@@ -154,6 +156,18 @@ script
 end script
 """.format(app_name=app_name, working_directory=working_directory)
 
+systemd_config = """
+[Unit]
+Description=uWSGI instance to serve {app_name}
+
+[Service]
+ExecStart={working_directory}/run_server_nginx
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+""".format(app_name=app_name, working_directory=working_directory)
+
 cleanup_script_template = """
 rm {app_name}_nginx.conf
 rm run_server
@@ -188,6 +202,14 @@ if add_to_host_file:
 	os.system('echo "' + host_line + '" | sudo tee -a /etc/hosts');
 
 
+if add_to_systemd:
+	systemd_config_name = '{app_name}_uwsgi_nginx'.format(app_name=app_name)
+	systemd_config_file_name = systemd_config_name + '.system'
+	write_file(systemd_config_file_name, systemd_config)
+	os.system('sudo cp {working_directory}/{systemd_config_file_name} /etc/systemd/system/{systemd_config_file_name}'.format(systemd_config_file_name = systemd_config_file_name, working_directory=working_directory))
+	os.system('sudo systemctl daemon-reload')
+	os.system('sudo systemctl start {systemd_config_namme}'.format(systemd_config_name=systemd_config_name))
+	
 if add_to_upstart:
 	upstart_config_name = '{app_name}_uwsgi_nginx'.format(app_name=app_name)
 	upstart_config_file_name = upstart_config_name + '.conf'
@@ -200,6 +222,7 @@ os.system("sed -i -e 's/^setup_app.py$/setup_app.py --no-generate-basic-site --n
 
 
 upstart_line = 'rm {upstart_config_file_name}\nsudo rm /etc/init/{upstart_config_file_name}'.format(upstart_config_file_name=upstart_config_file_name) if add_to_upstart else ''
+systemd_line = 'rm {systemd_config_file_name}\nsudo rm /etc/systemd/system/{systemd_config_file_name}'.format(systemd_config_file_name=systemd_config_file_name) if add_to_systemd else ''
 host_file_line = "sudo sed -i '/{host_line}/d' /etc/hosts".format(host_line=host_line) if add_to_host_file else ''
 
 if create_git_repo:
@@ -218,6 +241,7 @@ write_executable('cleanup.sh',
 												nginx_config_location=nginx_config_location, 
 												upstart_config_file_name=upstart_config_file_name,
 												upstart_line=upstart_line,
+												systemd_line=systemd_line,
 												host_file_line=host_file_line
 											)
 				 )
