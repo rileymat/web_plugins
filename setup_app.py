@@ -208,7 +208,7 @@ if add_to_systemd:
 	write_file(systemd_config_file_name, systemd_config)
 	os.system('sudo cp {working_directory}/{systemd_config_file_name} /etc/systemd/system/{systemd_config_file_name}'.format(systemd_config_file_name = systemd_config_file_name, working_directory=working_directory))
 	os.system('sudo systemctl daemon-reload')
-	os.system('sudo systemctl start {systemd_config_namme}'.format(systemd_config_name=systemd_config_name))
+	os.system('sudo systemctl start {systemd_config_name}'.format(systemd_config_name=systemd_config_name))
 	
 if add_to_upstart:
 	upstart_config_name = '{app_name}_uwsgi_nginx'.format(app_name=app_name)
