@@ -44,6 +44,8 @@ class JsonResponse(Response):
 		def fset(self, value):
 			self._json = value
 			self.response_text = json.dumps(value)
+  		return locals()
+	body = property(**body())
 		
 			
 class Redirect(Response):
