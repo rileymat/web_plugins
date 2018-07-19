@@ -34,7 +34,7 @@ class HtmlResponse(Response):
 
 class JsonResponse(Response):
 	def __init__(self, *args, **kwargs):
-		super(JsonResponse, self).__init__(*args. **kwargs)
+		super(JsonResponse, self).__init__(*args, **kwargs)
 		self.status_code = 200
 		self.set_header('content-type', 'application/json')
 		self._json = {}
