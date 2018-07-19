@@ -38,7 +38,7 @@ class JsonResponse(Response):
 		self.status_code = 200
 		self.set_header('content-type', 'application/json')
 		self._json = {}
-	def body(self):
+	def body():
 		def fget(self):
 			return self._json
 		def fset(self, value):
