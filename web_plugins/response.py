@@ -1,4 +1,5 @@
 import Cookie
+import json
 
 default_template_handler = None
 
@@ -31,6 +32,20 @@ class HtmlResponse(Response):
 		self.status_code = 200
 		self.set_header('Content-Type', 'text/html')
 
+class JsonResponse(Response):
+	def __init__(self, *args, **kwargs):
+		super(JsonResponse, self).__init__(*args. **kwargs)
+		self.status_code = 200
+		self.set_header('content-type', 'application/json')
+		self._json = {}
+	def body(self):
+		def fget(self):
+			return self._json
+		def fset(self, value):
+			self._json = value
+			self.response_text = json.dumps(value)
+		
+			
 class Redirect(Response):
 	def __init__(self, addr, origin=False):
 		super(Redirect, self).__init__()
