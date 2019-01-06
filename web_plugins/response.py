@@ -1,6 +1,9 @@
 import Cookie
 import json
 
+import gevent
+import gevent.fileobject
+
 default_template_handler = None
 
 class Response(object):
@@ -96,13 +99,10 @@ class FileResponse(Response):
 	def __init__(self, filename, status_code, *args, **kwargs):
 		super(FileResponse, self).__init__(*args, **kwargs)
 		self.status_code = status_code
-		with open(filename) as f:
-			self.response_text = f.read()
+		af = gevent.fileobject.FileObjectPosix(open(filename, 'r'))
+		self.response_text = af.read()
 		self.add_header('Content-Type', detect_content_type(filename))
 
-#class HtmlFileResponse(HtmlResponse, FileResponse):
-#	def __init__(self, filename, status_code=200):
-#		super(HtmlFileResponse, self).__init__(filename, status_code)
 
 class Middleware(object):
 	def __init__(self, middleware_func):

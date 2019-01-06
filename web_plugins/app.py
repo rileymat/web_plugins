@@ -6,13 +6,18 @@ def application(env, start_response):
 		request.session = application.session_handler.session_from_env(env)
 		
 	response = application.handler(request)
-	response.start_response = start_response
-	
-	if request.session is not None:
-		request.session.add_header(response)
+	for r in response:
+		try:
+			r.start_response = start_response
 
-	response.send_response_header()
-	return response.response_body()
+			if request.session is not None:
+				request.session.add_header(r)
+
+			r.send_response_header()
+			yield r.response_body()
+		except Exception:
+			yield ""
+
 
 application.session_handler = None
 application.template_handler = None

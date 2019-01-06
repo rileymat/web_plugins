@@ -80,7 +80,8 @@ class FileRoute(PathRoute):
 		def serve_file(url_path_prefix, local_file_location):
 			def serve_file_func(request):
 				file_path = local_file_location + '/' + request.path[len(url_path_prefix):]
-				return FileResponse(file_path, 200)
+				file_response = FileResponse(file_path, 200)
+				yield file_response
 			return serve_file_func
 		super(FileRoute, self).__init__(url_path_prefix,  serve_file(url_path_prefix, local_file_location))
 
