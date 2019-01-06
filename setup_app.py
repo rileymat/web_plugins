@@ -70,13 +70,13 @@ add_to_systemd = strtobool(input_or_default('Add to systemd', 'y'))
 
 ####### File templates ##################
 run_server = """source virtual_env/bin/activate
-uwsgi --http 127.0.0.1:{run_server_port} --wsgi-file {app_name}.py  --honour-stdin --async 10 
+uwsgi --http 127.0.0.1:{run_server_port} --wsgi-file {app_name}.py  --honour-stdin --async 10 --gevent 1000
 """.format(app_name=app_name, run_server_port=run_server_port)
 
 run_server_nginx = """#!/bin/bash
 cd {working_directory}
 source virtual_env/bin/activate
-uwsgi --socket virtual_env/{app_name}.sock --wsgi-file {app_name}.py --chmod-socket=666 --async 10
+uwsgi --socket virtual_env/{app_name}.sock --wsgi-file {app_name}.py --chmod-socket=666 --async 10 --gevent 1000
 """.format(app_name=app_name, working_directory=working_directory)
 
 nginx_config ="""
