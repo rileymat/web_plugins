@@ -18,10 +18,10 @@ def application(env, start_response):
 					first_pass = False
 				yield r.response_body()
 			except Exception as e:
-				print e
+				print(e)
 				yield ""
 	except Exception as e:
-		print e
+		print(e)
 		response.start_response = start_response
 		if request.session is not None:
 			request.session.add_header(response)
